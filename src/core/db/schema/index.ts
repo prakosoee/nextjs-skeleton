@@ -37,6 +37,10 @@ export const {
   approvalInstancesRelations,
   approvalInstanceStepsRelations,
   approvalLogsRelations,
+  trsDocumentRequests,
+  cfgCategoryWorkflows,
+  trsDocumentRequestsRelations,
+  cfgCategoryWorkflowsRelations,
 } = (isMysql ? mysqlSchema : pgSchema) as any
 
 // Type exports
@@ -71,4 +75,11 @@ export type {
   NewApprovalInstanceStep,
   ApprovalLog,
   NewApprovalLog,
+} from './pg'
+
+export type {
+  TrsDocumentRequest,
+  NewTrsDocumentRequest,
+  CfgCategoryWorkflow,
+  NewCfgCategoryWorkflow,
 } from './pg'

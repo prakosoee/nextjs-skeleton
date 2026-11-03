@@ -1,10 +1,11 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { toast } from 'sonner'
 import { Loader2, KeyRound } from 'lucide-react'
+import { toast } from 'sonner'
 import { useTitle } from '@/src/shared/contexts/TitleContext'
 import type { Permission } from '../domains/permission.entity'
+import { PermissionRepository } from '../repositories/permission.repository'
 
 export function PermissionTable() {
   const { setTitle } = useTitle()
@@ -18,10 +19,8 @@ export function PermissionTable() {
   const fetchData = useCallback(async () => {
     setLoading(true)
     try {
-      const res = await fetch('/api/user-management/permission')
-      if (!res.ok) throw new Error()
-      const data = await res.json()
-      setItems(data || [])
+      const data = await PermissionRepository.getAll()
+      setItems(Array.isArray(data) ? data : [])
     } catch {
       toast.error('Failed to load permissions')
     } finally {

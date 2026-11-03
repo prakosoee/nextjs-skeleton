@@ -35,7 +35,10 @@ function initDb() {
   } else {
     const connectionString =
       process.env.POSTGRES_URL || 'postgresql://postgres:password@localhost:5432/db_skeleton'
-    const pool = new PgPool({ connectionString })
+    const pool = new PgPool({
+      connectionString,
+      options: '-c timezone=UTC',
+    })
     const db = drizzlePg(pool, { schema: pgSchema })
     const instance = { db, pool }
     if (process.env.NODE_ENV !== 'production') {

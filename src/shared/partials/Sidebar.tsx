@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
 import { useSession } from "next-auth/react";
 import {
@@ -14,11 +14,10 @@ import {
   Settings,
   LogOut,
   ChevronDown,
-  Loader2,
   GitBranch,
-  Box,
+  FileText,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/src/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -26,8 +25,7 @@ import {
   DialogTitle,
   DialogFooter,
   DialogDescription,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+} from "@/src/components/ui/dialog";
 
 interface SidebarProps {
   isOpen: boolean;
@@ -49,6 +47,24 @@ const menuItems: MenuItem[] = [
     label: "Dashboard",
     href: "/dashboard",
     icon: LayoutDashboard,
+  },
+  {
+    key: "document-request",
+    label: "Document Request",
+    icon: FileText,
+    permission: "document-request.view",
+    children: [
+      {
+        key: "my-request",
+        label: "My Requests",
+        href: "/dashboard/document-request",
+      },
+      {
+        key: "approval-inbox",
+        label: "Approval Inbox",
+        href: "/dashboard/document-request/inbox",
+      },
+    ],
   },
   {
     key: "master-data",
@@ -216,23 +232,33 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
                         {item.label}
                       </span>
                       <ChevronDown
-                        className={`size-4 transition-transform ${isExpanded ? "rotate-180" : ""}`}
+                        className={`size-4 transition-transform duration-200 ${
+                          isExpanded ? "rotate-180" : ""
+                        }`}
                       />
                     </button>
 
                     {isExpanded && (
                       <ul className="mt-1 ml-4 space-y-1">
-                        {item.children!.map((child) => {
+                        {item.children?.map((child) => {
+                          const isExactMatch = pathname === child.href;
+                          const isPrefixMatch = pathname.startsWith(child.href + "/");
+                          const hasMoreSpecificSibling = item.children?.some(
+                            (sibling) =>
+                              sibling.href !== child.href &&
+                              sibling.href.startsWith(child.href) &&
+                              (pathname === sibling.href || pathname.startsWith(sibling.href + "/"))
+                          );
                           const isChildActive =
-                            pathname === child.href ||
-                            pathname.startsWith(child.href + "/");
+                            (isExactMatch || isPrefixMatch) && !hasMoreSpecificSibling;
+
                           return (
-                            <li key={child.href}>
+                            <li key={child.key}>
                               <Link
                                 href={child.href}
                                 className={`w-full flex items-center gap-3 px-4 py-2 rounded-lg text-sm transition-colors ${
                                   isChildActive
-                                    ? "bg-slate-100 text-slate-800"
+                                    ? "bg-slate-100 text-slate-800 font-medium"
                                     : "text-slate-500 hover:bg-slate-50"
                                 }`}
                               >
@@ -251,27 +277,43 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
             </ul>
           </nav>
 
-          {mounted && (
+          {/* User profile section */}
+          {mounted && session?.user && (
             <div className="p-4 border-t border-slate-100">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 font-medium text-xs">
+                  {session.user.name?.charAt(0) || "U"}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-slate-800 truncate">
+                    {session.user.name}
+                  </p>
+                  <p className="text-xs text-slate-400 truncate">
+                    {session.user.roles?.join(", ") || "No role"}
+                  </p>
+                </div>
+              </div>
+
+              <Button
+                variant="outline"
+                className="w-full flex items-center justify-center gap-2 text-slate-600 hover:text-red-600 hover:bg-red-50 hover:border-red-100 text-xs py-2"
+                onClick={() => setOpen(true)}
+              >
+                <LogOut className="size-3.5" />
+                Logout
+              </Button>
+
               <Dialog open={open} onOpenChange={setOpen}>
-                <DialogTrigger className="w-full flex items-center gap-3 px-4 py-3 rounded-lg bg-gradient-to-r from-cyan-500 to-pink-500 text-white font-medium hover:from-cyan-600 hover:to-pink-600 transition-all cursor-pointer shadow-sm">
-                  <LogOut className="size-4" />
-                  <span className="text-sm">Logout</span>
-                </DialogTrigger>
-                <DialogContent className="sm:max-w-[400px]">
+                <DialogContent>
                   <DialogHeader>
-                    <DialogTitle>Confirm Logout</DialogTitle>
+                    <DialogTitle>Konfirmasi Logout</DialogTitle>
                     <DialogDescription>
-                      Are you sure you want to logout?
+                      Apakah Anda yakin ingin keluar dari akun ini?
                     </DialogDescription>
                   </DialogHeader>
-                  <DialogFooter className="flex justify-end gap-2">
-                    <Button
-                      variant="outline"
-                      className="cursor-pointer"
-                      onClick={() => setOpen(false)}
-                    >
-                      Cancel
+                  <DialogFooter className="gap-2 sm:gap-0">
+                    <Button variant="outline" onClick={() => setOpen(false)}>
+                      Batal
                     </Button>
                     <Button
                       variant="destructive"
